@@ -36,7 +36,7 @@ go version
 ```
 
 
-### 1.4 Configurar Variables de Entorno (Opcional)
+### 1.4 Configurar Variables de Entorno
 
 ```sh
 nano ~/.profile
@@ -236,7 +236,7 @@ After=network.target
 [Service]
 Type=simple
 User=isard
-WorkingDirectory=/home/isard/webapp
+WorkingDirectory=/home/user/webapp
 ExecStart=/usr/local/bin/webapp
 Restart=on-failure
 Environment=PORT=8080
