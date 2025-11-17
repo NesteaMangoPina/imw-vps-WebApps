@@ -47,8 +47,18 @@ if ! id -u "$APP_USER" >/dev/null 2>&1; then
   useradd --system --no-create-home --shell /usr/sbin/nologin "$APP_USER"
 fi
 
-# 3) Copiar archivos del proyecto
-log "Creando directorio de instalación en $INSTALL_DIR…"
+# 3) Copiar archivos del proyecto (¡SECCIÓN MODIFICADA!)
+log "Comprobando directorio de instalación $INSTALL_DIR..."
+
+if [ -d "$INSTALL_DIR" ]; then
+  log "El directorio ya existe. Deteniendo el servicio y borrando para una instalación limpia..."
+  # Detenemos el servicio si existe (ignoramos el error si no existe)
+  systemctl stop "$SERVICE_NAME" || true
+  # Borramos la carpeta de instalación antigua
+  rm -rf "$INSTALL_DIR"
+fi
+
+log "Creando directorio de instalación virgen en $INSTALL_DIR…"
 mkdir -p "$INSTALL_DIR"
 
 log "Copiando archivos del proyecto (Cargo.toml, build.rs, src/)..."
