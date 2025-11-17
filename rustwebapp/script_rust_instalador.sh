@@ -28,33 +28,35 @@ require_root() { [[ $EUID -eq 0 ]] || { echo "[ERROR] Ejecuta este script como r
 # 0) Requisitos
 require_root
 
-# 1) Instalar Dependencias de Rust
-log "Actualizando sistema e instalando Cargo, RustC y Build-Essential…"
+# 1) Instalar Dependencias del Sistema
+log "Actualizando sistema e instalando Build-Essential y Curl…"
 apt update
 apt upgrade -y
-# Instalamos 'cargo' desde apt. Esto trae 'rustc' y es más simple 
-# para un script de servidor que 'rustup'.
-apt install -y cargo build-essential curl
-
-log "Verificando Cargo y RustC instalados…"
-cargo version
-rustc --version
+# ¡YA NO INSTALAMOS 'cargo' DESDE APT!
+apt install -y build-essential curl
 
 # 2) Usuario del servicio
 if ! id -u "$APP_USER" >/dev/null 2>&1; then
-  log "Creando usuario del servicio: $APP_USER"
-  # Usuario de sistema, sin home, sin login
-  useradd --system --no-create-home --shell /usr/sbin/nologin "$APP_USER"
+  log "Creando usuario del servicio: $APP_USER (con home dir para rustup)"
+  # Usuario de sistema, CON home, sin login
+  useradd --system --create-home --shell /usr/sbin/nologin "$APP_USER"
 fi
 
-# 3) Copiar archivos del proyecto (¡SECCIÓN MODIFICADA!)
+# 2.5) Instalar Rust (con rustup) como el usuario del servicio
+log "Instalando Rust (rustup) para el usuario $APP_USER..."
+# Ejecutamos el instalador de rustup como el nuevo usuario
+# El -y acepta todas las opciones por defecto
+# El -H es crucial para que use el $HOME (/home/rustwebapp) del nuevo usuario
+sudo -u "$APP_USER" -H bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path"
+log "Rust (rustup) instalado en /home/$APP_USER/.cargo"
+
+
+# 3) Copiar archivos del proyecto
 log "Comprobando directorio de instalación $INSTALL_DIR..."
 
 if [ -d "$INSTALL_DIR" ]; then
   log "El directorio ya existe. Deteniendo el servicio y borrando para una instalación limpia..."
-  # Detenemos el servicio si existe (ignoramos el error si no existe)
   systemctl stop "$SERVICE_NAME" || true
-  # Borramos la carpeta de instalación antigua
   rm -rf "$INSTALL_DIR"
 fi
 
@@ -62,36 +64,33 @@ log "Creando directorio de instalación virgen en $INSTALL_DIR…"
 mkdir -p "$INSTALL_DIR"
 
 log "Copiando archivos del proyecto (Cargo.toml, build.rs, src/)..."
-# Comprobamos que estamos en la carpeta correcta (donde están los archivos fuente)
 if ! [ -f Cargo.toml ] || ! [ -f build.rs ] || ! [ -d src ]; then
   log "[ERROR] No se encuentran los archivos del proyecto (Cargo.toml, build.rs, src/)."
   log "Asegúrate de ejecutar este script desde la carpeta que contiene tu código."
   exit 1
 fi
 
-# Copiamos la estructura del proyecto
 cp Cargo.toml "$INSTALL_DIR"
 cp build.rs "$INSTALL_DIR"
 cp -r src "$INSTALL_DIR"
 
-# 4) Compilar el binario
-log "Compilando binario en modo release (esto puede tardar varios minutos)..."
-cd "$INSTALL_DIR"
-# Ejecutamos 'cargo build' como root, ya que instalamos cargo globalmente
-cargo build --release
+# 4) Permisos (Antes de compilar)
+log "Asignando permisos de compilación en $INSTALL_DIR al usuario $APP_USER..."
+# Damos al usuario control sobre todo el directorio para que 'cargo' pueda escribir
+chown -R "$APP_USER":"$APP_USER" "$INSTALL_DIR"
+
+# 5) Compilar el binario (como el usuario $APP_USER)
+log "Compilando binario como $APP_USER (esto puede tardar varios minutos)..."
+# Ejecutamos la compilación como el $APP_USER para que use SU versión de rustup
+sudo -u "$APP_USER" -H bash -c "source \$HOME/.cargo/env && cd $INSTALL_DIR && cargo build --release"
 cd / # Volvemos al directorio raíz
 log "Binario compilado en: $APP_BIN_PATH"
 
-# 5) Permisos
-log "Asignando permisos en $INSTALL_DIR al usuario $APP_USER..."
-# Damos al usuario control sobre todo el directorio
-chown -R "$APP_USER":"$APP_USER" "$INSTALL_DIR"
-# Solo el usuario puede entrar, leer y ejecutar
+# 6) Permisos Finales
+log "Asignando permisos finales de ejecución..."
 chmod 750 "$INSTALL_DIR"
 chmod 750 "$APP_BIN_PATH"
-
-# 6) Env del servicio (Saltado)
-log "Saltando creación de ENV_FILE (El puerto $APP_PORT está hardcodeado en main.rs)..."
+# (chown ya se hizo en el paso 4)
 
 # 7) Unidad systemd
 log "Creando unidad systemd: /etc/systemd/system/$SERVICE_NAME"
@@ -109,6 +108,9 @@ WorkingDirectory=$INSTALL_DIR
 ExecStart=$APP_BIN_PATH
 Restart=on-failure
 RestartSec=3
+
+# ¡IMPORTANTE! El $HOME del usuario tiene el binario de Rust
+Environment="PATH=/home/$APP_USER/.cargo/bin:/usr/bin:/bin"
 
 # Endurecimiento básico (igual que el script de Go)
 NoNewPrivileges=true
