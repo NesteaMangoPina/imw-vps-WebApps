@@ -35,12 +35,19 @@ apt upgrade -y
 # ¡YA NO INSTALAMOS 'cargo' DESDE APT!
 apt install -y build-essential curl
 
-# 2) Usuario del servicio
+# 2) Usuario del servicio (¡SECCIÓN CORREGIDA!)
 if ! id -u "$APP_USER" >/dev/null 2>&1; then
-  log "Creando usuario del servicio: $APP_USER (con home dir para rustup)"
-  # Usuario de sistema, CON home, sin login
-  useradd --system --create-home --shell /usr/sbin/nologin "$APP_USER"
+  log "Creando usuario del servicio: $APP_USER"
+  # 1. Crear el usuario (sin home, para evitar conflictos)
+  useradd --system --shell /usr/sbin/nologin "$APP_USER"
 fi
+
+log "Asegurando que el directorio $HOME ($APP_USER) existe..."
+# 2. Crear su home directory manualmente
+mkdir -p "/home/$APP_USER"
+# 3. Asignar permisos ANTES de que rustup intente escribir
+chown -R "$APP_USER":"$APP_USER" "/home/$APP_USER"
+
 
 # 2.5) Instalar Rust (con rustup) como el usuario del servicio
 log "Instalando Rust (rustup) para el usuario $APP_USER..."
@@ -64,6 +71,7 @@ log "Creando directorio de instalación virgen en $INSTALL_DIR…"
 mkdir -p "$INSTALL_DIR"
 
 log "Copiando archivos del proyecto (Cargo.toml, build.rs, src/)..."
+# Usamos '*' para copiar archivos/carpetas ocultos si los hubiera
 if ! [ -f Cargo.toml ] || ! [ -f build.rs ] || ! [ -d src ]; then
   log "[ERROR] No se encuentran los archivos del proyecto (Cargo.toml, build.rs, src/)."
   log "Asegúrate de ejecutar este script desde la carpeta que contiene tu código."
