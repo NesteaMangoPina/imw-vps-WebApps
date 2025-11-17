@@ -1,0 +1,11 @@
+[package]
+name = "mi_app_rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.42"
+# Versión simple de actix-web, sin 'features' de rustls
+actix-web = "4"
+serde = { version = "1.0", features = ["derive"] }
+# No se incluyen rustls ni rustls-pemfile
