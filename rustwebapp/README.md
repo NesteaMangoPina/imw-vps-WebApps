@@ -27,7 +27,9 @@ Copiar código
 
 ```sh
 chmod +x script_rust_instalador.sh
-▶️ 2. Ejecutar el script (obligatorio como root o con sudo)
+
+## ▶️ 2. Ejecutar el script (obligatorio como root o con sudo)
+
 sh
 Copiar código
 sudo ./script_rust_instalador.sh
@@ -51,7 +53,7 @@ Apertura del puerto configurado en UFW
 
 Inicio y habilitación del servicio al arrancar
 
-🌐 3. Acceso a la WebApp
+## 🌐 3. Acceso a la WebApp
 Una vez completada la instalación, la app estará disponible en:
 
 cpp
