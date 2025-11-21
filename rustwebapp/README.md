@@ -28,6 +28,9 @@ Copiar código
 ```sh
 chmod +x script_rust_instalador.sh
 
+```
+--- 
+
 ## ▶️ 2. Ejecutar el script (obligatorio como root o con sudo)
 
 sh
@@ -53,6 +56,8 @@ Apertura del puerto configurado en UFW
 
 Inicio y habilitación del servicio al arrancar
 
+---
+
 ## 🌐 3. Acceso a la WebApp
 Una vez completada la instalación, la app estará disponible en:
 
@@ -61,14 +66,19 @@ Copiar código
 http://<IP_DEL_SERVIDOR>:8081/
 (Puerto configurado dentro del script: APP_PORT="8081")
 
-🛠 4. Comandos útiles del servicio systemd
+---
+
+## 🛠 4. Comandos útiles del servicio systemd
 sh
 Copiar código
 sudo systemctl status rustwebapp
 sudo systemctl restart rustwebapp
 sudo systemctl stop rustwebapp
 sudo journalctl -u rustwebapp -f
-📌 Notas importantes
+
+---
+
+## 📌 Notas importantes
 El script despliega el proyecto en:
 
 bash
