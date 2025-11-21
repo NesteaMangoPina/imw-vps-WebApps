@@ -34,66 +34,66 @@ chmod +x script_rust_instalador.sh
 ## ▶️ 2. Ejecutar el script (obligatorio como root o con sudo)
 
 ```sh
-Copiar código
 sudo ./script_rust_instalador.sh
 ```
 
-El script realizará automáticamente:
+# El script realizará automáticamente:
 
-Actualización del sistema
+- Actualización del sistema
 
-Instalación de dependencias (build-essential, curl)
+- Instalación de dependencias (build-essential, curl)
 
-Creación del usuario del servicio
+- Creación del usuario del servicio
 
-Instalación de Rust mediante rustup
+- Instalación de Rust mediante rustup
 
-Copia del proyecto a /opt/rustwebapp
+- Copia del proyecto a /opt/rustwebapp
 
-Compilación en modo --release
+- Compilación en modo --release
 
-Creación del servicio systemd
+- Creación del servicio systemd
 
-Apertura del puerto configurado en UFW
+- Apertura del puerto configurado en UFW
 
-Inicio y habilitación del servicio al arrancar
+- Inicio y habilitación del servicio al arrancar
 
 ---
 
 ## 🌐 3. Acceso a la WebApp
+
 Una vez completada la instalación, la app estará disponible en:
 
 ```cpp
-Copiar código
+
 http://<IP_DEL_SERVIDOR>:8081/
 (Puerto configurado dentro del script: APP_PORT="8081")
 ```
 ---
 
 ## 🛠 4. Comandos útiles del servicio systemd
-sh
-Copiar código
+```sh
 sudo systemctl status rustwebapp
 sudo systemctl restart rustwebapp
 sudo systemctl stop rustwebapp
 sudo journalctl -u rustwebapp -f
-
+```
 ---
 
 ## 📌 Notas importantes
+
 El script despliega el proyecto en:
 
-bash
-Copiar código
+```bash
 /opt/rustwebapp
 Compila usando el usuario interno rustwebapp
-
+```
 El binario final queda en:
 
-swift
-Copiar código
+```swift
 /opt/rustwebapp/target/release/mi_app_rust
+```
 El servicio creado en systemd se llama:
 
-Copiar código
+```
 rustwebapp.service
+```
