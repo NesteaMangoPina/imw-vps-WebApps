@@ -33,9 +33,11 @@ chmod +x script_rust_instalador.sh
 
 ## ▶️ 2. Ejecutar el script (obligatorio como root o con sudo)
 
-sh
+```sh
 Copiar código
 sudo ./script_rust_instalador.sh
+```
+
 El script realizará automáticamente:
 
 Actualización del sistema
@@ -61,11 +63,11 @@ Inicio y habilitación del servicio al arrancar
 ## 🌐 3. Acceso a la WebApp
 Una vez completada la instalación, la app estará disponible en:
 
-cpp
+```cpp
 Copiar código
 http://<IP_DEL_SERVIDOR>:8081/
 (Puerto configurado dentro del script: APP_PORT="8081")
-
+```
 ---
 
 ## 🛠 4. Comandos útiles del servicio systemd
